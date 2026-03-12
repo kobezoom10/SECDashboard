@@ -9,9 +9,12 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify(req.body)
     });
-    const data = await response.json();
-    res.json(data);
+    const text = await response.text();
+    console.log("SEC API response status:", response.status);
+    console.log("SEC API response body:", text);
+    res.json(JSON.parse(text));
   } catch (error) {
+    console.log("FULL ERROR:", error.message, error.stack);
     res.status(500).json({ error: error.message });
   }
 }
