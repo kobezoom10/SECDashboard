@@ -253,7 +253,7 @@ export default function SECIntel() {
       const palette = ["#e05c3a","#4a9eff","#34c98d","#f0a500","#b388ff","#ff6b9d","#00d4aa","#ffd700","#ff9966","#66ffcc"];
       setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
     }
-    const tagYears = [2018, 2020, 2022, 2024];
+    const tagYears = [2015, 2017, 2019, 2021, 2023, 2025];
 const tagYearData = [];
 for (const yr of tagYears) {
   await new Promise(r => setTimeout(r, 400));
