@@ -228,28 +228,32 @@ export default function SECIntel() {
     load();
   }, []);
 
-  const loadTrends = async () => {
+const loadTrends = async () => {
   setLoadingTrend(true);
   const years = [2000,2005,2010,2015,2018,2019,2020,2021,2022,2023,2024];
-  const rows = await Promise.all(years.map(async yr=>{
-    const q=`releasedAt:[${yr}-01-01 TO ${yr}-12-31]`;
-    const [enf,lit,adm]=await Promise.all([
+  const rows = [];
+  
+  for (const yr of years) {
+    const q = `releasedAt:[${yr}-01-01 TO ${yr}-12-31]`;
+    const [enf,lit,adm] = await Promise.all([
       secPost(ENDPOINTS.enforcement,{query:q,size:1}),
       secPost(ENDPOINTS.litigation, {query:q,size:1}),
       secPost(ENDPOINTS.admin,      {query:q,size:1}),
     ]);
-    return {year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0};
-  }));
-    setTrendData(rows);
-    const tagRes = await secPost(ENDPOINTS.enforcement,{query:`releasedAt:[1997-01-01 TO ${TODAY}]`,size:100});
-    if (tagRes?.data) {
-      const counts={};
-      tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
-      const palette=[C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa"];
-      setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
-    }
-    setLoadingTrend(false);
-  };
+    rows.push({year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0});
+    await new Promise(r => setTimeout(r, 300));
+  }
+  
+  setTrendData(rows);
+  const tagRes = await secPost(ENDPOINTS.enforcement,{query:`releasedAt:[1997-01-01 TO ${TODAY}]`,size:100});
+  if (tagRes?.data) {
+    const counts={};
+    tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
+    const palette=[C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa"];
+    setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
+  }
+  setLoadingTrend(false);
+};
 
   const handleAnalyze = async (item, type) => {
     if (analysis?.id===item.id){setAnalysis(null);return;}
