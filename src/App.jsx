@@ -102,7 +102,7 @@ function Badge({text,color}){
 function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
   const isActive = activeAnalysis?.id === item.id;
   const title = item.title || item.respondents?.join(", ") || "SEC Action";
-  const dateField = item.filedAt || item.releasedAt || item.dateTime;
+  const dateField = item.releasedAt || item.releasedAt || item.dateTime;
   const totalPenalty = item.penaltyAmounts?.reduce((s,p)=>s+(Number(p.penaltyAmount)||0),0);
   const tags = item.tags?.slice(0,3)||[];
   return (
@@ -165,7 +165,7 @@ export default function SECIntel() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
-  const [dateFrom, setDateFrom] = useState("2023-01-01");
+  const [dateFrom, setDateFrom] = useState("1997-01-01");
   const [dateTo, setDateTo] = useState("2025-03-11");
   const [searchText, setSearchText] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
@@ -183,7 +183,7 @@ export default function SECIntel() {
     setItems([]);
   
     const ep = ENDPOINTS[type];
-    const dateField = DATE_FIELDS[type] || "filedAt";
+    const dateField = DATE_FIELDS[type] || "releasedAt";
   
     const q = query
       ? `title:${query} OR summary:${query} OR tags:"${query}"`
@@ -211,7 +211,7 @@ export default function SECIntel() {
 
   useEffect(() => {
     const load = async () => {
-      const q = "filedAt:[2024-01-01 TO 2025-03-11]";
+      const q = "releasedAt:[1997-01-01 TO 2025-03-11]";
       const [enf,lit,adm] = await Promise.all([
         secPost(ENDPOINTS.enforcement,{query:q,size:1}),
         secPost(ENDPOINTS.litigation, {query:q,size:1}),
@@ -227,19 +227,21 @@ export default function SECIntel() {
   }, []);
 
   const loadTrends = async () => {
-    setLoadingTrend(true);
-    const years = [2020,2021,2022,2023,2024];
-    const rows = await Promise.all(years.map(async yr=>{
-      const q=`filedAt:[${yr}-01-01 TO ${yr}-12-31]`;
-      const [enf,lit,adm]=await Promise.all([
-        secPost(ENDPOINTS.enforcement,{query:q,size:1}),
-        secPost(ENDPOINTS.litigation, {query:q,size:1}),
-        secPost(ENDPOINTS.admin,      {query:q,size:1}),
-      ]);
+  setLoadingTrend(true);
+  const years = [2000,2005,2010,2015,2018,2019,2020,2021,2022,2023,2024];
+  const rows = await Promise.all(years.map(async yr=>{
+    const q=`releasedAt:[${yr}-01-01 TO ${yr}-12-31]`;
+    const [enf,lit,adm]=await Promise.all([
+      secPost(ENDPOINTS.enforcement,{query:q,size:1}),
+      secPost(ENDPOINTS.litigation, {query:q,size:1}),
+      secPost(ENDPOINTS.admin,      {query:q,size:1}),
+    ]);
+    return {year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0};
+  }));
       return {year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0};
     }));
     setTrendData(rows);
-    const tagRes = await secPost(ENDPOINTS.enforcement,{query:"filedAt:[2023-01-01 TO 2025-03-11]",size:100});
+    const tagRes = await secPost(ENDPOINTS.enforcement,{query:"releasedAt:[1997-01-01 TO 2025-03-11]",size:100});
     if (tagRes?.data) {
       const counts={};
       tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
@@ -257,7 +259,7 @@ export default function SECIntel() {
       "You are a senior SEC enforcement analyst and CPA with 20+ years of experience. Your analyses are concise, technically precise, and actionable for accounting and compliance professionals.",
       `SEC ${type.toUpperCase()} Action:
 Title: ${item.title||"N/A"}
-Date: ${fmtDate(item.filedAt||item.releasedAt)}
+Date: ${fmtDate(item.releasedAt||item.releasedAt)}
 Entities: ${item.entities?.map(e=>e.name).join(", ")||"N/A"}
 Tags: ${item.tags?.join(", ")||"N/A"}
 Summary: ${item.summary||"N/A"}
@@ -279,7 +281,7 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     const tags=tagBreakdown.map(t=>`${t.name}:${t.value}`).join(", ");
     const text = await callClaude(
       "You are an expert SEC enforcement analyst and accounting thought leader. Provide sharp, data-driven insights for CPAs, audit partners, and CFOs.",
-      `Real live data from sec-api.io:\n\nAnnual counts:\n${rows}\n\nTop violation tags (2023–2025): ${tags}\n\n1. What are the 3 most significant enforcement trends in this data?\n2. What should accounting professionals watch for in 2025–2026?\n3. Any patterns in settlement vs. litigation?\n\nKeep to 6-7 sentences. Be specific and cite numbers.`
+      `Real live data from sec-api.io:\n\nAnnual counts:\n${rows}\n\nTop violation tags (1997–2025): ${tags}\n\n1. What are the 3 most significant enforcement trends in this data?\n2. What should accounting professionals watch for in 2025–2026?\n3. Any patterns in settlement vs. litigation?\n\nKeep to 6-7 sentences. Be specific and cite numbers.`
     );
     setTrendInsight(text);
     setLoadingInsight(false);
@@ -449,7 +451,7 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
                   </div>
 
                   <div style={{background:"#0f1117",border:"1px solid #0f1420",borderRadius:13,padding:20}}>
-                    <div style={{fontSize:11,color:"#445",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:16,fontFamily:"'DM Mono',monospace"}}>Top Violation Tags · 2023–2025</div>
+                    <div style={{fontSize:11,color:"#445",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:16,fontFamily:"'DM Mono',monospace"}}>Top Violation Tags · 1997–2025</div>
                     {tagBreakdown.length>0?(
                       <div style={{display:"flex",alignItems:"center",gap:16}}>
                         <ResponsiveContainer width={155} height={155}>
