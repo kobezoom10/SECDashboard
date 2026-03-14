@@ -20,8 +20,6 @@ const DATE_FIELDS = {
 
 const TODAY = new Date().toISOString().split("T")[0];
 
-const [tagsByYear, setTagsByYear] = useState([]);
-
 const C = {
   enforcement: "#e05c3a", litigation: "#4a9eff",
   admin: "#34c98d", aaer: "#f0a500", purple: "#b388ff",
@@ -172,6 +170,7 @@ export default function SECIntel() {
   const [tab, setTab] = useState("feed");
   const [feedType, setFeedType] = useState("enforcement");
   const [items, setItems] = useState([]);
+  const [tagsByYear, setTagsByYear] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
