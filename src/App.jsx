@@ -238,8 +238,6 @@ export default function SECIntel() {
     ]);
     return {year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0};
   }));
-      return {year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0};
-    }));
     setTrendData(rows);
     const tagRes = await secPost(ENDPOINTS.enforcement,{query:"releasedAt:[1997-01-01 TO 2025-03-11]",size:100});
     if (tagRes?.data) {
