@@ -103,7 +103,7 @@ function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
   const isActive = activeAnalysis?.id === item.id;
   const title = item.title || item.respondents?.map(r => r.name)?.join(", ") || "SEC Action";
   const dateField = item.releasedAt || item.releasedAt || item.dateTime;
-  const totalPenalty = item.penaltyAmounts?.reduce((s,p)=>s+(Number(p?.penaltyAmount||0)||0),0);
+  const totalPenalty = item.penaltyAmounts?.filter(p => p && p.penaltyAmount != null)?.reduce((s,p)=>s+(Number(p.penaltyAmount)||0),0) || 0;
   const tags = item.tags?.slice(0,3)||[];
   return (
     <div style={{borderBottom:"1px solid #111624",padding:"16px 0",animation:"fadeSlide 0.3s ease"}}>
@@ -133,9 +133,9 @@ function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
               ))}
             </div>
           )}
-          {item.penaltyAmounts?.filter(p=>p.penaltyAmount>0).length>0&&(
+          {item.penaltyAmounts?.filter(p=>p && p.penaltyAmount && p.penaltyAmount>0).length>0&&(
             <div style={{marginTop:8,display:"flex",gap:7,flexWrap:"wrap"}}>
-              {item.penaltyAmounts.filter(p=>p.penaltyAmount>0).slice(0,3).map((p,i)=>(
+              {item.penaltyAmounts.filter(p=>p && p.penaltyAmount && p.penaltyAmount>0).slice(0,3).map((p,i)=>(
                 <div key={i} style={{fontSize:11,background:"#180e0a",border:"1px solid #e05c3a22",color:"#b06840",padding:"3px 10px",borderRadius:5}}>
                   {fmtMoney(p.penaltyAmount)} → {trunc(p.imposedOn,35)}
                 </div>
