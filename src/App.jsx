@@ -28,6 +28,8 @@ const TAG_PRESETS = [
   "auditor independence","material weakness","restatement","cybersecurity",
 ];
 
+const TODAY = new Date().toISOString().split("T")[0];
+
 async function secPost(endpoint, payload) {
   try {
     const res = await fetch(endpoint, {
