@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid
+  ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Legend
 } from "recharts";
 
 const ENDPOINTS = {
@@ -508,19 +508,20 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     const allTags = [...new Set(tagsByYear.flatMap(yr => Object.keys(yr).filter(k => k !== "year")))];
     const palette = [C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa","#ffd700"];
     return (
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={tagsByYear} barGap={2}>
-          <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
-          <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
-          <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
-          <Tooltip
-            contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}
-            itemStyle={{color:"#ccd6f6"}}
-          />
-          {allTags.map((tag,i) => (
-            <Bar key={tag} dataKey={tag} stackId="a" fill={palette[i%palette.length]} name={tag}/>
-          ))}
-        </BarChart>
+      <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={tagsByYear} barGap={2}>
+  <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
+  <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+  <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+  <Legend wrapperStyle={{fontSize:11,color:"#667",paddingTop:12}}/>
+  <Tooltip
+    contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}
+    itemStyle={{color:"#ccd6f6"}}
+  />
+  {allTags.map((tag,i) => (
+    <Bar key={tag} dataKey={tag} fill={palette[i%palette.length]} name={tag} radius={[3,3,0,0]}/>
+  ))}
+</BarChart>
       </ResponsiveContainer>
     );
   })():<div style={{color:"#334",fontSize:12,textAlign:"center",paddingTop:40}}>Load trend data to see tag breakdown</div>}
