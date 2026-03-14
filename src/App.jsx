@@ -463,8 +463,10 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
                             <Pie data={tagBreakdown} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value" paddingAngle={3}>
                               {tagBreakdown.map((e,i)=><Cell key={i} fill={e.color}/>)}
                             </Pie>
-                            <Tooltip 
+                            <Tooltip
                               contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}
+                              itemStyle={{color:"#ccd6f6"}}
+                              labelStyle={{color:"#ccd6f6"}}
                               formatter={(value, name) => [value, name]}
                               />
                           </PieChart>
