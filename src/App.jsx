@@ -14,7 +14,7 @@ const DATE_FIELDS = {
   enforcement: "releasedAt",
   litigation: "releasedAt",
   admin: "releasedAt",
-  aaer: "releasedAt",
+  aaer: "dateTime",
 };
 
 const C = {
