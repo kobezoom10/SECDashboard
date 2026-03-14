@@ -20,6 +20,8 @@ const DATE_FIELDS = {
 
 const TODAY = new Date().toISOString().split("T")[0];
 
+const [tagsByYear, setTagsByYear] = useState([]);
+
 const C = {
   enforcement: "#e05c3a", litigation: "#4a9eff",
   admin: "#34c98d", aaer: "#f0a500", purple: "#b388ff",
@@ -252,6 +254,22 @@ export default function SECIntel() {
       const palette=[C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa"];
       setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
     }
+    const tagYears = [2018, 2020, 2022, 2024];
+const tagYearData = [];
+for (const yr of tagYears) {
+  await new Promise(r => setTimeout(r, 400));
+  const res = await secPost(ENDPOINTS.enforcement, {
+    query: `releasedAt:[${yr}-01-01 TO ${yr}-12-31]`,
+    size: 50
+  });
+  if (res?.data) {
+    const counts = {};
+    res.data.forEach(i => (i.tags||[]).forEach(t => { counts[t] = (counts[t]||0)+1; }));
+    const top5 = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    tagYearData.push({ year: String(yr), ...Object.fromEntries(top5) });
+  }
+}
+setTagsByYear(tagYearData);
     setLoadingTrend(false);
   };
 
@@ -485,20 +503,29 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
                   </div>
                 </div>
 
-                <div style={{background:"#0f1117",border:"1px solid #0f1420",borderRadius:13,padding:20,marginBottom:18}}>
-                  <div style={{fontSize:11,color:"#445",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:16,fontFamily:"'DM Mono',monospace"}}>Year-over-Year Comparison</div>
-                  <ResponsiveContainer width="100%" height={170}>
-                    <BarChart data={trendData} barGap={3}>
-                      <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
-                      <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
-                      <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
-                      <Tooltip contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}/>
-                      <Bar dataKey="enforcement" fill={C.enforcement} radius={[4,4,0,0]} name="Enforcement"/>
-                      <Bar dataKey="litigation"  fill={C.litigation}  radius={[4,4,0,0]} name="Litigation"/>
-                      <Bar dataKey="admin"       fill={C.admin}       radius={[4,4,0,0]} name="Admin"/>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+               <div style={{background:"#0f1117",border:"1px solid #0f1420",borderRadius:13,padding:20,marginBottom:18}}>
+  <div style={{fontSize:11,color:"#445",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:16,fontFamily:"'DM Mono',monospace"}}>Top Enforcement Tags by Year</div>
+  {tagsByYear.length>0?(()=>{
+    const allTags = [...new Set(tagsByYear.flatMap(yr => Object.keys(yr).filter(k => k !== "year")))];
+    const palette = [C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa","#ffd700"];
+    return (
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={tagsByYear} barGap={2}>
+          <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
+          <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+          <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+          <Tooltip
+            contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}
+            itemStyle={{color:"#ccd6f6"}}
+          />
+          {allTags.map((tag,i) => (
+            <Bar key={tag} dataKey={tag} stackId="a" fill={palette[i%palette.length]} name={tag}/>
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  })():<div style={{color:"#334",fontSize:12,textAlign:"center",paddingTop:40}}>Load trend data to see tag breakdown</div>}
+</div>
 
                 <div style={{background:"#060910",border:`1px solid ${C.purple}33`,borderRadius:13,padding:22}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
