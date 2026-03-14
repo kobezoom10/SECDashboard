@@ -232,7 +232,7 @@ export default function SECIntel() {
 
   const loadTrends = async () => {
     setLoadingTrend(true);
-    const years = [2000,2005,2010,2015,2018,2019,2020,2021,2022,2023,2024, 2025];
+    const years = [2000,2005,2010,2015,2018,2019,2020,2021,2022,2023,2024,2025];
     const rows = [];
     for (const yr of years) {
       const q = `releasedAt:[${yr}-01-01 TO ${yr}-12-31]`;
