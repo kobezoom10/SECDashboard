@@ -250,7 +250,7 @@ export default function SECIntel() {
     if (tagRes?.data) {
       const counts={};
       tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
-      const palette = ["#e05c3a","#4a9eff","#34c98d","#f0a500","#b388ff","#ff6b9d","#00d4aa","#ffd700","#ff9966","#66ffcc"];
+      const palette = ["#e05c3a","#4a9eff","#34c98d","#f0a500","#b388ff","#ff6b9d","#00d4aa","#ffd700","#ff6b35","#00b4d8","#90e0ef","#c77dff","#80ffdb","#ffb703","#fb8500"];
       setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
     }
     const tagYears = [2015, 2017, 2019, 2021, 2023, 2025];
