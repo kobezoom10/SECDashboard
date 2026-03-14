@@ -241,19 +241,19 @@ const loadTrends = async () => {
       secPost(ENDPOINTS.admin,      {query:q,size:1}),
     ]);
     rows.push({year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0});
-    await new Promise(r => setTimeout(r, 300));
-  }
-  
-  setTrendData(rows);
-  const tagRes = await secPost(ENDPOINTS.enforcement,{query:`releasedAt:[1997-01-01 TO ${TODAY}]`,size:100});
-  if (tagRes?.data) {
-    const counts={};
-    tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
-    const palette=[C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa"];
-    setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
-  }
-  setLoadingTrend(false);
-};
+// wait before tag query to avoid rate limit
+await new Promise(r => setTimeout(r, 500));
+
+const tagRes = await secPost(ENDPOINTS.enforcement,{query:`releasedAt:[2020-01-01 TO ${TODAY}]`,size:50});
+if (tagRes?.data) {
+  const counts={};
+  tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
+  const palette=[C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa"];
+  setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
+} else {
+  console.log("Tag response:", tagRes);
+}
+setLoadingTrend(false);
 
   const handleAnalyze = async (item, type) => {
     if (analysis?.id===item.id){setAnalysis(null);return;}
