@@ -11,10 +11,10 @@ const ENDPOINTS = {
   aaer: "/api/aaer",
 };
 const DATE_FIELDS = {
-  enforcement: "filedAt",
+  enforcement: "releasedAt",
   litigation: "releasedAt",
-  admin: "filedAt",
-  aaer: "filedAt",
+  admin: "releasedAt",
+  aaer: "releasedAt",
 };
 
 const C = {
