@@ -250,7 +250,7 @@ export default function SECIntel() {
     if (tagRes?.data) {
       const counts={};
       tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
-      const palette=[C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa"];
+      const palette = ["#e05c3a","#4a9eff","#34c98d","#f0a500","#b388ff","#ff6b9d","#00d4aa","#ffd700","#ff9966","#66ffcc"];
       setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
     }
     const tagYears = [2018, 2020, 2022, 2024];
@@ -509,7 +509,7 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     const palette = [C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa","#ffd700"];
     return (
       <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={tagsByYear} barGap={2}>
+      <BarChart data={tagsByYear} barGap={2} barCategoryGap="5%">
   <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
   <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
   <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
