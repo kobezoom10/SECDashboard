@@ -103,7 +103,7 @@ function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
   const isActive = activeAnalysis?.id === item.id;
   const title = item.title || item.respondents?.map(r => r.name)?.join(", ") || "SEC Action";
   const dateField = item.releasedAt || item.releasedAt || item.dateTime;
-  const totalPenalty = item.penaltyAmounts?.reduce((s,p)=>s+(Number(p.penaltyAmount)||0),0);
+  const totalPenalty = item.penaltyAmounts?.reduce((s,p)=>s+(Number(p?.penaltyAmount||0)||0),0);
   const tags = item.tags?.slice(0,3)||[];
   return (
     <div style={{borderBottom:"1px solid #111624",padding:"16px 0",animation:"fadeSlide 0.3s ease"}}>
