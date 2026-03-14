@@ -166,7 +166,7 @@ export default function SECIntel() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [dateFrom, setDateFrom] = useState("1997-01-01");
-  const [dateTo, setDateTo] = useState("2025-03-11");
+  const [dateTo, setDateTo] = useState(TODAY);
   const [searchText, setSearchText] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   const [analysis, setAnalysis] = useState(null);
@@ -211,7 +211,7 @@ export default function SECIntel() {
 
   useEffect(() => {
     const load = async () => {
-      const q = "releasedAt:[1997-01-01 TO 2025-03-11]";
+      const q = `releasedAt:[2024-01-01 TO ${TODAY}]`;
       const [enf,lit,adm] = await Promise.all([
         secPost(ENDPOINTS.enforcement,{query:q,size:1}),
         secPost(ENDPOINTS.litigation, {query:q,size:1}),
@@ -239,7 +239,7 @@ export default function SECIntel() {
     return {year:String(yr),enforcement:enf?.total?.value||0,litigation:lit?.total?.value||0,admin:adm?.total?.value||0};
   }));
     setTrendData(rows);
-    const tagRes = await secPost(ENDPOINTS.enforcement,{query:"releasedAt:[1997-01-01 TO 2025-03-11]",size:100});
+    const tagRes = await secPost(ENDPOINTS.enforcement,{query:`releasedAt:[1997-01-01 TO ${TODAY}]`,size:100});
     if (tagRes?.data) {
       const counts={};
       tagRes.data.forEach(i=>(i.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1}));
