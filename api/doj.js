@@ -1,28 +1,28 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  
   try {
     const { query, from = 0, size = 20 } = req.body;
-    
-    // DOJ API uses parameters[title] for keyword filtering
     const pageNum = Math.floor(from / size) + 1;
-    const keywords = query || "securities fraud";
 
-    const url = `https://www.justice.gov/api/v1/press_releases.json?parameters[title]=${encodeURIComponent(keywords)}&pagesize=${size}&page=${pageNum}&sort_by=field_pr_date&sort_order=DESC`;
+    // Use topic filter for Financial Fraud (topic ID 1201) from USAO press releases
+    let url;
+    if (query) {
+      url = `https://www.justice.gov/api/v1/press_releases.json?parameters[title]=${encodeURIComponent(query)}&pagesize=${size}&page=${pageNum}&sort=date&direction=DESC`;
+    } else {
+      // Default: financial fraud topic
+      url = `https://www.justice.gov/api/v1/press_releases.json?parameters[topic]=financial-fraud&pagesize=${size}&page=${pageNum}&sort=date&direction=DESC`;
+    }
 
-    const response = await fetch(url, {
-      headers: { "Accept": "application/json" }
-    });
-
-    const text = await response.text();
-    console.log("DOJ response:", text.slice(0, 500));
-    const data = JSON.parse(text);
+    const response = await fetch(url, { headers: { "Accept": "application/json" } });
+    const data = await response.json();
+    console.log("DOJ URL:", url);
+    console.log("DOJ count:", data.metadata?.resultset?.count);
 
     const items = (data.results || []).map(item => ({
       id: item.uuid,
       title: item.title,
       releasedAt: item.date,
-      url: `https://www.justice.gov${item.path}`,
+      url: item.url,
       summary: item.body?.replace(/<[^>]*>/g, "").slice(0, 300) + "…",
       tags: extractTags(item.title + " " + (item.body || "")),
       entities: [],
@@ -30,11 +30,11 @@ export default async function handler(req, res) {
     }));
 
     res.json({
-      total: { value: data.metadata?.resultset?.count || items.length },
+      total: { value: Number(data.metadata?.resultset?.count) || items.length },
       data: items,
     });
   } catch (error) {
-    console.error(error);
+    console.error("DOJ error:", error);
     res.status(500).json({ error: error.message });
   }
 }
@@ -55,6 +55,8 @@ function extractTags(text) {
     ["bank fraud", "bank fraud"],
     ["crypto", "crypto"],
     ["investment fraud", "investment fraud"],
+    ["financial fraud", "financial fraud"],
+    ["white collar", "white collar"],
   ];
   return tagMap.filter(([k]) => lower.includes(k)).map(([, v]) => v).slice(0, 3);
 }
