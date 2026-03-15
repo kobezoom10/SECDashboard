@@ -4,11 +4,11 @@ export default async function handler(req, res) {
     const { query, from = 0, size = 20 } = req.body;
     const pageNum = Math.floor(from / size) + 1;
 
-    let url = `https://www.justice.gov/api/v1/press_releases.json?pagesize=${size}&page=${pageNum}&sort_by=field_pr_date&sort_order=DESC`;
+    let url = `https://www.justice.gov/api/v1/press_releases.json?sort=created&direction=DESC&pagesize=${size}&page=${pageNum}`;
     
     if (query) {
-      url += `&s=${encodeURIComponent(query)}`;
-    }
+  url += `&search=${encodeURIComponent(query)}`;
+}
 
     const response = await fetch(url, { headers: { "Accept": "application/json" } });
     const data = await response.json();
