@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     const response = await fetch(url, { headers: { "Accept": "application/json" } });
     const data = await response.json();
 
-    const items = (data.results || []).map(item => ({
+  const allItems = (data.results || []).map(item => ({
       id: item.uuid,
       title: item.title,
       releasedAt: item.date ? new Date(Number(item.date) * 1000).toISOString() : null,
@@ -25,8 +25,16 @@ export default async function handler(req, res) {
       source: "DOJ",
     }));
 
+    const FINANCIAL_KEYWORDS = ["fraud", "securities", "accounting", "embezzl", "ponzi", "insider trading", "money laundering", "bribery", "fcpa", "wire fraud", "financial crime", "crypto", "investment scheme"];
+    const items = allItems.filter(item =>
+      FINANCIAL_KEYWORDS.some(kw =>
+        item.title?.toLowerCase().includes(kw) ||
+        item.summary?.toLowerCase().includes(kw)
+      )
+    );
+
     res.json({
-      total: { value: Number(data.metadata?.resultset?.count) || items.length },
+      total: { value: items.length },
       data: items,
     });
   } catch (error) {
