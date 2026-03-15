@@ -453,7 +453,7 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
                     <ResponsiveContainer width="100%" height={210}>
                       <LineChart data={trendData}>
                         <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
-                        <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+                        <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false} interval={0}/>
                         <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
                         <Tooltip contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}/>
                         <Line type="monotone" dataKey="enforcement" stroke={C.enforcement} strokeWidth={2} dot={{r:4,fill:C.enforcement}} name="Enforcement"/>
