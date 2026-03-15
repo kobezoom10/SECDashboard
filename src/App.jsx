@@ -205,8 +205,8 @@ export default function SECIntel() {
     const ep = ENDPOINTS[type];
     const dateField = DATE_FIELDS[type] || "releasedAt";
     const q = query
-      ? `title:${query} OR summary:${query} OR tags:"${query}"`
-      : `${dateField}:[${dateFrom} TO ${dateTo}]`;
+  ? `title:"${query}" OR summary:"${query}" OR tags:"${query}"`
+  : `${dateField}:[${dateFrom} TO ${dateTo}]`;
     const result = await secPost(ep, {
       query: q,
       from: pg * 20,
