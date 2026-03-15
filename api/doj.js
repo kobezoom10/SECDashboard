@@ -4,19 +4,16 @@ export default async function handler(req, res) {
     const { query, from = 0, size = 20 } = req.body;
     const pageNum = Math.floor(from / size) + 1;
 
-    // Use topic filter for Financial Fraud (topic ID 1201) from USAO press releases
-    let url;
+    let url = `https://www.justice.gov/api/v1/press_releases.json?pagesize=${size}&page=${pageNum}&sort_by=field_pr_date&sort_order=DESC`;
+    
     if (query) {
-      url = `https://www.justice.gov/api/v1/press_releases.json?parameters[title]=${encodeURIComponent(query)}&pagesize=${size}&page=${pageNum}&sort=date&direction=DESC`;
-    } else {
-      // Default: financial fraud topic
-      url = `https://www.justice.gov/api/v1/press_releases.json?parameters[topic]=financial-fraud&pagesize=${size}&page=${pageNum}&sort=date&direction=DESC`;
+      url += `&s=${encodeURIComponent(query)}`;
     }
 
     const response = await fetch(url, { headers: { "Accept": "application/json" } });
     const data = await response.json();
-    console.log("DOJ URL:", url);
     console.log("DOJ count:", data.metadata?.resultset?.count);
+    console.log("DOJ results:", data.results?.length);
 
     const items = (data.results || []).map(item => ({
       id: item.uuid,
