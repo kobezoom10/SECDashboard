@@ -123,16 +123,19 @@ function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
             {item.hasAgreedToSettlement!==undefined&&<Badge text={item.hasAgreedToSettlement?"settled":"contested"} color={item.hasAgreedToSettlement?C.admin:C.enforcement}/>}
             {totalPenalty>0&&<span style={{fontSize:11,color:C.enforcement,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{fmtMoney(totalPenalty)}</span>}
           </div>
-          {item.url ? (
-  <a href={item.url} target="_blank" rel="noreferrer"
-    style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5,display:"block",textDecoration:"none",cursor:"pointer"}}
-    onMouseEnter={e=>e.currentTarget.style.color="#4a9eff"}
-    onMouseLeave={e=>e.currentTarget.style.color="#ccd6f6"}>
-    {trunc(title,150)} <span style={{fontSize:10,color:"#334"}}>↗</span>
-  </a>
-) : (
-  <div style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5}}>{trunc(title,150)}</div>
-)}
+      {(() => {
+  const link = item.url || item.urls?.find(u => u.type === "Administrative Summary")?.url || item.urls?.[0]?.url;
+  return link ? (
+    <a href={link} target="_blank" rel="noreferrer"
+      style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5,display:"block",textDecoration:"none",cursor:"pointer"}}
+      onMouseEnter={e=>e.currentTarget.style.color="#4a9eff"}
+      onMouseLeave={e=>e.currentTarget.style.color="#ccd6f6"}>
+      {trunc(title,150)} <span style={{fontSize:10,color:"#334"}}>↗</span>
+    </a>
+  ) : (
+    <div style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5}}>{trunc(title,150)}</div>
+  );
+})()}
           {item.summary&&<div style={{fontSize:12,color:"#5a6a80",lineHeight:1.6}}>{trunc(item.summary,170)}</div>}
           {item.entities?.length>0&&(
             <div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
