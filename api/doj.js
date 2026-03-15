@@ -3,10 +3,13 @@ export default async function handler(req, res) {
   try {
     const { query, from = 0, size = 20 } = req.body;
     const pageNum = Math.floor(from / size) + 1;
-    
-    const searchTerm = query || "securities fraud financial fraud accounting fraud wire fraud";
-    
-    const url = `https://www.justice.gov/api/v1/press_releases.json?sort=created&direction=DESC&pagesize=${size}&page=${pageNum}&search=${encodeURIComponent(searchTerm)}`;
+
+    // Filter by Financial Fraud topic UUID
+    let url = `https://www.justice.gov/api/v1/press_releases.json?sort=created&direction=DESC&pagesize=${size}&page=${pageNum}&parameters[topic][]=1201`;
+
+    if (query) {
+      url += `&search=${encodeURIComponent(query)}`;
+    }
 
     const response = await fetch(url, { headers: { "Accept": "application/json" } });
     const data = await response.json();
@@ -14,7 +17,7 @@ export default async function handler(req, res) {
     const items = (data.results || []).map(item => ({
       id: item.uuid,
       title: item.title,
-      releasedAt: item.created,
+      releasedAt: item.date ? new Date(Number(item.date) * 1000).toISOString() : null,
       url: item.url,
       summary: item.body?.replace(/<[^>]*>/g, "").slice(0, 300) + "…",
       tags: extractTags(item.title + " " + (item.body || "")),
