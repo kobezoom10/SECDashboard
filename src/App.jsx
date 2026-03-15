@@ -124,7 +124,7 @@ function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
             {totalPenalty>0&&<span style={{fontSize:11,color:C.enforcement,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{fmtMoney(totalPenalty)}</span>}
           </div>
       {(() => {
-  const link = item.url || item.urls?.find(u => u.type === "Administrative Summary")?.url || item.urls?.[0]?.url;
+  const link = item.url || item.urls?.find(u => u.type === "Administrative Summary")?.url || item.urls?.[0]?.url || item.resources?.[0]?.url;
   return link ? (
     <a href={link} target="_blank" rel="noreferrer"
       style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5,display:"block",textDecoration:"none",cursor:"pointer"}}
