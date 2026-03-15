@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const pageNum = Math.floor(from / size) + 1;
 
     // Filter by Financial Fraud topic UUID
-    let url = `https://www.justice.gov/api/v1/press_releases.json?sort=created&direction=DESC&pagesize=${size}&page=${pageNum}&parameters[topic][]=1201`;
+    let url = `https://www.justice.gov/api/v1/press_releases.json?sort=created&direction=DESC&pagesize=${size}&page=${pageNum}&parameters[topic]=financial-fraud`;
 
     if (query) {
       url += `&search=${encodeURIComponent(query)}`;
