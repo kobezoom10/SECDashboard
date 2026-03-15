@@ -9,6 +9,7 @@ const ENDPOINTS = {
   litigation: "/api/litigation",
   admin: "/api/admin",
   aaer: "/api/aaer",
+  doj: "/api/doj",
 };
 
 const DATE_FIELDS = {
@@ -16,6 +17,7 @@ const DATE_FIELDS = {
   litigation: "releasedAt",
   admin: "releasedAt",
   aaer: "dateTime",
+  doj: "releasedAt",
 };
 
 const TODAY = new Date().toISOString().split("T")[0];
@@ -23,6 +25,7 @@ const TODAY = new Date().toISOString().split("T")[0];
 const C = {
   enforcement: "#e05c3a", litigation: "#4a9eff",
   admin: "#34c98d", aaer: "#f0a500", purple: "#b388ff",
+  doj: "#ff4466",
 };
 
 const TAG_PRESETS = [
@@ -325,6 +328,7 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     {id:"litigation", label:"Litigation Releases",color:C.litigation, icon:"⚡"},
     {id:"admin",      label:"Admin Proceedings",  color:C.admin,      icon:"📋"},
     {id:"aaer",       label:"AAERs",              color:C.aaer,       icon:"🔎"},
+    {id:"doj",        label:"DOJ Criminal",       color:C.doj,        icon:"⚠"},
   ];
 
   return (
