@@ -23,7 +23,8 @@ export default async function handler(req, res) {
       params.set("cursor", cursor);
     }
 
-    const url = `https://www.courtlistener.com/api/rest/v4/search/?${params.toString()}`;
+    
+const url = `https://www.courtlistener.com/api/rest/v4/search/?type=d&q=${encodeURIComponent(baseQuery)}&page_size=${size}`;
 
     const response = await fetch(url, {
       method: "GET",
