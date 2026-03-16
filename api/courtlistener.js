@@ -18,6 +18,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     console.log("CourtListener count:", data.count);
+console.log("CourtListener sample:", JSON.stringify(data).slice(0, 500));
 
     const items = (data.results || []).map(item => ({
       id: String(item.id),
