@@ -9,7 +9,7 @@ const ENDPOINTS = {
   litigation: "/api/litigation",
   admin: "/api/admin",
   aaer: "/api/aaer",
-  doj: "/api/doj",
+  courtlistener: "/api/courtlistener",
 };
 
 const DATE_FIELDS = {
@@ -17,7 +17,7 @@ const DATE_FIELDS = {
   litigation: "releasedAt",
   admin: "releasedAt",
   aaer: "dateTime",
-  doj: "releasedAt",
+  courtlistener: "releasedAt",
 };
 
 const TODAY = new Date().toISOString().split("T")[0];
@@ -328,7 +328,7 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     {id:"litigation", label:"Litigation Releases",color:C.litigation, icon:"⚡"},
     {id:"admin",      label:"Admin Proceedings",  color:C.admin,      icon:"📋"},
     {id:"aaer",       label:"AAERs",              color:C.aaer,       icon:"🔎"},
-    {id:"doj",        label:"DOJ Criminal",       color:C.doj,        icon:"⚠"},
+    {id:"courtlistener", label:"Federal Cases",   color:C.doj,        icon:"🏛"},
   ];
 
   return (
