@@ -3,26 +3,29 @@ export default async function handler(req, res) {
   try {
     const { query, from = 0, size = 20 } = req.body;
     const page = Math.floor(from / size) + 1;
-    const searchTerm = query ? query : "securities fraud OR accounting fraud OR wire fraud OR insider trading";
 
-    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(searchTerm)}&type=d&order_by=score+desc&filed_after=2010-01-01`;
+    // Build query with date filter using Lucene syntax
+    const baseQuery = query || "securities fraud OR accounting fraud OR wire fraud OR insider trading";
+    const fullQuery = `(${baseQuery}) AND dateFiled:[2000-01-01 TO NOW]`;
+
+    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(fullQuery)}&type=r&order_by=dateFiled+desc&page_size=${size}&page=${page}`;
 
     const response = await fetch(url, {
-  headers: {
-    "Authorization": `Token ${process.env.COURTLISTENER_API_KEY}`,
-    "Accept": "application/json",
-  }
-});
+      headers: {
+        "Authorization": `Token ${process.env.COURTLISTENER_API_KEY}`,
+        "Accept": "application/json",
+      }
+    });
 
-const text = await response.text();
-console.log("Status:", response.status);
-console.log("Raw response:", text.slice(0, 500));
-const data = JSON.parse(text);
+    const text = await response.text();
+    console.log("Status:", response.status);
+    console.log("Sample:", text.slice(0, 300));
+    const data = JSON.parse(text);
 
     const items = (data.results || []).map(item => ({
       id: String(item.docket_id || item.id),
-      title: item.caseName || item.case_name || "Federal Case",
-      releasedAt: item.dateFiled || item.date_filed,
+      title: item.caseName || item.caseNameFull || "Federal Case",
+      releasedAt: item.dateFiled,
       url: item.absolute_url ? `https://www.courtlistener.com${item.absolute_url}` : null,
       summary: [
         item.court ? `Court: ${item.court}` : null,
