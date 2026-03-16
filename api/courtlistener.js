@@ -8,15 +8,16 @@ export default async function handler(req, res) {
     const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(searchTerm)}&type=d&order_by=score+desc&page_size=${size}&page=${page}`;
 
     const response = await fetch(url, {
-      headers: {
-        "Authorization": `Token ${process.env.COURTLISTENER_API_KEY}`,
-        "Accept": "application/json",
-      }
-    });
+  headers: {
+    "Authorization": `Token ${process.env.COURTLISTENER_API_KEY}`,
+    "Accept": "application/json",
+  }
+});
 
-    const data = await response.json();
-    console.log("Full response:", JSON.stringify(data).slice(0, 1000));
-    console.log("CourtListener count:", data.count);
+const text = await response.text();
+console.log("Status:", response.status);
+console.log("Raw response:", text.slice(0, 500));
+const data = JSON.parse(text);
 
     const items = (data.results || []).map(item => ({
       id: String(item.docket_id || item.id),
