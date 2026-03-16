@@ -6,9 +6,8 @@ export default async function handler(req, res) {
 
     // Build query with date filter using Lucene syntax
     const baseQuery = query || "securities fraud OR accounting fraud OR wire fraud OR insider trading";
-    const fullQuery = `(${baseQuery}) AND dateFiled:[2000-01-01 TO NOW]`;
 
-    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=securities+fraud&type=r`;
+const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(baseQuery)}&type=r&order_by=dateFiled+desc&stat_Published=on&filed_after=01/01/2000&filed_before=03/15/2026&page_size=${size}&page=${page}`;
 
     const response = await fetch(url, {
       headers: {
