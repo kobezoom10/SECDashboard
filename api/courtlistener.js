@@ -3,11 +3,9 @@ export default async function handler(req, res) {
   try {
     const { query, from = 0, size = 20 } = req.body;
     const page = Math.floor(from / size) + 1;
+    const searchTerm = query || "securities fraud financial fraud accounting fraud";
 
-    // Default to financial crime related searches
-    const searchTerm = query || "securities fraud financial fraud accounting fraud wire fraud";
-
-    const url = `https://www.courtlistener.com/api/rest/v4/dockets/?search=${encodeURIComponent(searchTerm)}&order_by=-date_filed&page_size=${size}&page=${page}`;
+    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(searchTerm)}&type=d&order_by=score+desc&page_size=${size}&page=${page}`;
 
     const response = await fetch(url, {
       headers: {
@@ -17,30 +15,23 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    console.log("CourtListener status:", response.status);
     console.log("CourtListener count:", data.count);
-console.log("CourtListener sample:", JSON.stringify(data).slice(0, 500));
 
     const items = (data.results || []).map(item => ({
-      id: String(item.id),
-      title: item.case_name || item.case_name_short || "Federal Case",
-      releasedAt: item.date_filed,
-      url: `https://www.courtlistener.com${item.absolute_url}`,
+      id: String(item.docket_id || item.id),
+      title: item.caseName || item.case_name || "Federal Case",
+      releasedAt: item.dateFiled || item.date_filed,
+      url: item.absolute_url ? `https://www.courtlistener.com${item.absolute_url}` : null,
       summary: [
-        item.court_id ? `Court: ${item.court_id.toUpperCase()}` : null,
-        item.docket_number ? `Docket: ${item.docket_number}` : null,
-        item.nature_of_suit ? `Nature: ${item.nature_of_suit}` : null,
+        item.court ? `Court: ${item.court}` : null,
+        item.docketNumber ? `Docket: ${item.docketNumber}` : null,
+        item.suitNature ? `Nature: ${item.suitNature}` : null,
         item.cause ? `Cause: ${item.cause}` : null,
       ].filter(Boolean).join(" · "),
-      tags: extractTags(
-        (item.case_name || "") + " " +
-        (item.nature_of_suit || "") + " " +
-        (item.cause || "")
-      ),
-      entities: item.parties ? item.parties.slice(0, 4).map(p => ({ name: p.name, ticker: null })) : [],
+      tags: extractTags((item.caseName || "") + " " + (item.suitNature || "") + " " + (item.cause || "")),
+      entities: [],
       source: "CourtListener",
-      docketNumber: item.docket_number,
-      court: item.court_id?.toUpperCase(),
-      cause: item.cause,
     }));
 
     res.json({
