@@ -3,9 +3,9 @@ export default async function handler(req, res) {
   try {
     const { query, from = 0, size = 20 } = req.body;
     const page = Math.floor(from / size) + 1;
-    const searchTerm = query || "securities fraud financial fraud accounting fraud";
+    const searchTerm = query ? query : "securities fraud OR accounting fraud OR wire fraud OR insider trading";
 
-    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=securities+fraud&type=d`;
+    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(searchTerm)}&type=d&order_by=score+desc&filed_after=2010-01-01`;
 
     const response = await fetch(url, {
   headers: {
