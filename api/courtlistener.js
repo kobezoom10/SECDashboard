@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const page = Math.floor(from / size) + 1;
     const searchTerm = query || "securities fraud financial fraud accounting fraud";
 
-    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(searchTerm)}&type=d&order_by=dateFiled+desc&filed_after=2000-01-01&nature_of_suit=850`;
+    const url = `https://www.courtlistener.com/api/rest/v4/search/?q=${encodeURIComponent(searchTerm)}&type=d&order_by=dateFiled+desc`;
 
     const response = await fetch(url, {
   headers: {
