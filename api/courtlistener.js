@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    console.log("CourtListener status:", response.status);
+    console.log("Full response:", JSON.stringify(data).slice(0, 1000));
     console.log("CourtListener count:", data.count);
 
     const items = (data.results || []).map(item => ({
