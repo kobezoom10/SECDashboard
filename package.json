@@ -17,6 +17,7 @@
     "react-dom": "^19.2.4",
     "recharts": "^2.12.7",
     "sec-api": "^1.0.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
