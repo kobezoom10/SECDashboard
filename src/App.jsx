@@ -342,7 +342,6 @@ const exportToExcel = () => {
   XLSX.writeFile(wb, `SEC_${feedType}_${TODAY}.xlsx`);
 };
 
-const feedTypes=[
   const feedTypes=[
     {id:"enforcement",label:"Enforcement Actions",color:C.enforcement,icon:"⚖"},
     {id:"litigation", label:"Litigation Releases",color:C.litigation, icon:"⚡"},
