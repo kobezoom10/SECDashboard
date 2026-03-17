@@ -24,8 +24,6 @@ const DATE_FIELDS = {
 
 const TODAY = new Date().toISOString().split("T")[0];
 
-const [exporting, setExporting] = useState(false);
-
 const C = {
   enforcement: "#e05c3a", litigation: "#4a9eff",
   admin: "#34c98d", aaer: "#f0a500", purple: "#b388ff",
