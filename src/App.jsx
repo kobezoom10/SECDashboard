@@ -24,6 +24,8 @@ const DATE_FIELDS = {
 
 const TODAY = new Date().toISOString().split("T")[0];
 
+const [exporting, setExporting] = useState(false);
+
 const C = {
   enforcement: "#e05c3a", litigation: "#4a9eff",
   admin: "#34c98d", aaer: "#f0a500", purple: "#b388ff",
@@ -324,8 +326,33 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     setTrendInsight(text);
     setLoadingInsight(false);
   };
-const exportToExcel = () => {
-  const rows = items.map(item => ({
+const exportToExcel = async () => {
+  setExporting(true);
+  const ep = ENDPOINTS[feedType];
+  const dateField = DATE_FIELDS[feedType] || "releasedAt";
+  const q = activeQuery
+    ? `(title:${activeQuery} OR summary:${activeQuery} OR tags:${activeQuery} OR complaints:${activeQuery}) AND ${dateField}:[${dateFrom} TO ${dateTo}]`
+    : `${dateField}:[${dateFrom} TO ${dateTo}]`;
+
+  let allItems = [];
+  let page = 0;
+  const pageSize = 50;
+
+  while (true) {
+    const result = await secPost(ep, {
+      query: q,
+      from: page * pageSize,
+      size: pageSize,
+      sort: [{ [dateField]: { order: "desc" } }],
+    });
+    if (!result?.data || result.data.length === 0) break;
+    allItems = [...allItems, ...result.data];
+    if (allItems.length >= result.total?.value || allItems.length >= 10000) break;
+    page++;
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  const rows = allItems.map(item => ({
     "Date": fmtDate(item.releasedAt || item.dateTime),
     "Title": item.title || item.respondents?.map(r=>r.name)?.join(", ") || "SEC Action",
     "Tags": item.tags?.join(", ") || "",
@@ -336,10 +363,12 @@ const exportToExcel = () => {
     "Summary": item.summary || "",
     "URL": item.url || item.urls?.[0]?.url || "",
   }));
+
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "SEC Enforcement");
   XLSX.writeFile(wb, `SEC_${feedType}_${TODAY}.xlsx`);
+  setExporting(false);
 };
 
   const feedTypes=[
@@ -438,9 +467,9 @@ const exportToExcel = () => {
   style={{background:"#e05c3a",border:"none",borderRadius:7,padding:"8px 16px",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
   Search
 </button>
-<button onClick={exportToExcel} disabled={items.length === 0}
+<button onClick={exportToExcel} disabled={items.length === 0 || exporting}
   style={{background:"#0f1117",border:"1px solid #1a2030",borderRadius:7,padding:"8px 16px",color:items.length===0?"#333":"#ccd6f6",fontSize:12,fontWeight:600,cursor:items.length===0?"default":"pointer"}}>
-  ↓ Export
+  {exporting ? "Exporting…" : "↓ Export All"}
 </button>
               </div>
 
