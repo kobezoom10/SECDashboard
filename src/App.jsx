@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Legend
 } from "recharts";
+
 
 const ENDPOINTS = {
   enforcement: "/api/enforcement",
@@ -322,7 +324,25 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     setTrendInsight(text);
     setLoadingInsight(false);
   };
+const exportToExcel = () => {
+  const rows = items.map(item => ({
+    "Date": fmtDate(item.releasedAt || item.dateTime),
+    "Title": item.title || item.respondents?.map(r=>r.name)?.join(", ") || "SEC Action",
+    "Tags": item.tags?.join(", ") || "",
+    "Settlement": item.hasAgreedToSettlement === true ? "Settled" : item.hasAgreedToSettlement === false ? "Contested" : "",
+    "Total Penalty": item.penaltyAmounts?.filter(p=>p&&p.penaltyAmount).reduce((s,p)=>s+(Number(p.penaltyAmount)||0),0) || "",
+    "Entities": item.entities?.map(e=>e.name).join(", ") || "",
+    "Violated Sections": item.violatedSections?.join("; ") || "",
+    "Summary": item.summary || "",
+    "URL": item.url || item.urls?.[0]?.url || "",
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SEC Enforcement");
+  XLSX.writeFile(wb, `SEC_${feedType}_${TODAY}.xlsx`);
+};
 
+const feedTypes=[
   const feedTypes=[
     {id:"enforcement",label:"Enforcement Actions",color:C.enforcement,icon:"⚖"},
     {id:"litigation", label:"Litigation Releases",color:C.litigation, icon:"⚡"},
@@ -415,6 +435,14 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
                   style={{background:"#e05c3a",border:"none",borderRadius:7,padding:"8px 16px",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
                   Search
                 </button>
+                <button onClick={()=>{setActiveQuery(searchText);setPage(0);}}
+  style={{background:"#e05c3a",border:"none",borderRadius:7,padding:"8px 16px",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+  Search
+</button>
+<button onClick={exportToExcel} disabled={items.length === 0}
+  style={{background:"#0f1117",border:"1px solid #1a2030",borderRadius:7,padding:"8px 16px",color:items.length===0?"#333":"#ccd6f6",fontSize:12,fontWeight:600,cursor:items.length===0?"default":"pointer"}}>
+  ↓ Export
+</button>
               </div>
 
               <div style={{fontSize:12,color:"#334",marginBottom:12,fontFamily:"'DM Mono',monospace"}}>
