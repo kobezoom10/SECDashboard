@@ -5,7 +5,6 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Legend
 } from "recharts";
 
-
 const ENDPOINTS = {
   enforcement: "/api/enforcement",
   litigation: "/api/litigation",
@@ -128,19 +127,19 @@ function EnfCard({item,type,onAnalyze,activeAnalysis,analyzing}){
             {item.hasAgreedToSettlement!==undefined&&<Badge text={item.hasAgreedToSettlement?"settled":"contested"} color={item.hasAgreedToSettlement?C.admin:C.enforcement}/>}
             {totalPenalty>0&&<span style={{fontSize:11,color:C.enforcement,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{fmtMoney(totalPenalty)}</span>}
           </div>
-      {(() => {
-  const link = item.url || item.urls?.find(u => u.type === "Administrative Summary")?.url || item.urls?.[0]?.url || item.resources?.[0]?.url;
-  return link ? (
-    <a href={link} target="_blank" rel="noreferrer"
-      style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5,display:"block",textDecoration:"none",cursor:"pointer"}}
-      onMouseEnter={e=>e.currentTarget.style.color="#4a9eff"}
-      onMouseLeave={e=>e.currentTarget.style.color="#ccd6f6"}>
-      {trunc(title,150)} <span style={{fontSize:10,color:"#334"}}>↗</span>
-    </a>
-  ) : (
-    <div style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5}}>{trunc(title,150)}</div>
-  );
-})()}
+          {(() => {
+            const link = item.url || item.urls?.find(u => u.type === "Administrative Summary")?.url || item.urls?.[0]?.url || item.resources?.[0]?.url;
+            return link ? (
+              <a href={link} target="_blank" rel="noreferrer"
+                style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5,display:"block",textDecoration:"none",cursor:"pointer"}}
+                onMouseEnter={e=>e.currentTarget.style.color="#4a9eff"}
+                onMouseLeave={e=>e.currentTarget.style.color="#ccd6f6"}>
+                {trunc(title,150)} <span style={{fontSize:10,color:"#334"}}>↗</span>
+              </a>
+            ) : (
+              <div style={{fontSize:13,color:"#ccd6f6",fontWeight:600,lineHeight:1.5,marginBottom:5}}>{trunc(title,150)}</div>
+            );
+          })()}
           {item.summary&&<div style={{fontSize:12,color:"#5a6a80",lineHeight:1.6}}>{trunc(item.summary,170)}</div>}
           {item.entities?.length>0&&(
             <div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -203,6 +202,7 @@ export default function SECIntel() {
   const [trendInsight, setTrendInsight] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [statsMap, setStatsMap] = useState({});
+  const [exporting, setExporting] = useState(false);
 
   const fetchFeed = useCallback(async (type, query, pg) => {
     setLoading(true);
@@ -210,8 +210,8 @@ export default function SECIntel() {
     const ep = ENDPOINTS[type];
     const dateField = DATE_FIELDS[type] || "releasedAt";
     const q = query
-  ? `(title:${query} OR summary:${query} OR tags:${query} OR complaints:${query}) AND ${dateField}:[${dateFrom} TO ${dateTo}]`
-  : `${dateField}:[${dateFrom} TO ${dateTo}]`;
+      ? `(title:${query} OR summary:${query} OR tags:${query} OR complaints:${query}) AND ${dateField}:[${dateFrom} TO ${dateTo}]`
+      : `${dateField}:[${dateFrom} TO ${dateTo}]`;
     const result = await secPost(ep, {
       query: q,
       from: pg * 20,
@@ -271,21 +271,21 @@ export default function SECIntel() {
       setTagBreakdown(Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([name,value],i)=>({name,value,color:palette[i]})));
     }
     const tagYears = [2015, 2017, 2019, 2021, 2023, 2025];
-const tagYearData = [];
-for (const yr of tagYears) {
-  await new Promise(r => setTimeout(r, 400));
-  const res = await secPost(ENDPOINTS.enforcement, {
-    query: `releasedAt:[${yr}-01-01 TO ${yr}-12-31]`,
-    size: 50
-  });
-  if (res?.data) {
-    const counts = {};
-    res.data.forEach(i => (i.tags||[]).forEach(t => { counts[t] = (counts[t]||0)+1; }));
-    const top5 = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    tagYearData.push({ year: String(yr), ...Object.fromEntries(top5) });
-  }
-}
-setTagsByYear(tagYearData);
+    const tagYearData = [];
+    for (const yr of tagYears) {
+      await new Promise(r => setTimeout(r, 400));
+      const res = await secPost(ENDPOINTS.enforcement, {
+        query: `releasedAt:[${yr}-01-01 TO ${yr}-12-31]`,
+        size: 50
+      });
+      if (res?.data) {
+        const counts = {};
+        res.data.forEach(i => (i.tags||[]).forEach(t => { counts[t] = (counts[t]||0)+1; }));
+        const top5 = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        tagYearData.push({ year: String(yr), ...Object.fromEntries(top5) });
+      }
+    }
+    setTagsByYear(tagYearData);
     setLoadingTrend(false);
   };
 
@@ -324,50 +324,47 @@ Provide 4-5 sentences covering: (1) the core accounting/securities violation, (2
     setTrendInsight(text);
     setLoadingInsight(false);
   };
-const exportToExcel = async () => {
-  setExporting(true);
-  const ep = ENDPOINTS[feedType];
-  const dateField = DATE_FIELDS[feedType] || "releasedAt";
-  const q = activeQuery
-    ? `(title:${activeQuery} OR summary:${activeQuery} OR tags:${activeQuery} OR complaints:${activeQuery}) AND ${dateField}:[${dateFrom} TO ${dateTo}]`
-    : `${dateField}:[${dateFrom} TO ${dateTo}]`;
 
-  let allItems = [];
-  let page = 0;
-  const pageSize = 50;
-
-  while (true) {
-    const result = await secPost(ep, {
-      query: q,
-      from: page * pageSize,
-      size: pageSize,
-      sort: [{ [dateField]: { order: "desc" } }],
-    });
-    if (!result?.data || result.data.length === 0) break;
-    allItems = [...allItems, ...result.data];
-    if (allItems.length >= result.total?.value || allItems.length >= 10000) break;
-    page++;
-    await new Promise(r => setTimeout(r, 300));
-  }
-
-  const rows = allItems.map(item => ({
-    "Date": fmtDate(item.releasedAt || item.dateTime),
-    "Title": item.title || item.respondents?.map(r=>r.name)?.join(", ") || "SEC Action",
-    "Tags": item.tags?.join(", ") || "",
-    "Settlement": item.hasAgreedToSettlement === true ? "Settled" : item.hasAgreedToSettlement === false ? "Contested" : "",
-    "Total Penalty": item.penaltyAmounts?.filter(p=>p&&p.penaltyAmount).reduce((s,p)=>s+(Number(p.penaltyAmount)||0),0) || "",
-    "Entities": item.entities?.map(e=>e.name).join(", ") || "",
-    "Violated Sections": item.violatedSections?.join("; ") || "",
-    "Summary": item.summary || "",
-    "URL": item.url || item.urls?.[0]?.url || "",
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "SEC Enforcement");
-  XLSX.writeFile(wb, `SEC_${feedType}_${TODAY}.xlsx`);
-  setExporting(false);
-};
+  const exportToExcel = async () => {
+    setExporting(true);
+    const ep = ENDPOINTS[feedType];
+    const dateField = DATE_FIELDS[feedType] || "releasedAt";
+    const q = activeQuery
+      ? `(title:${activeQuery} OR summary:${activeQuery} OR tags:${activeQuery} OR complaints:${activeQuery}) AND ${dateField}:[${dateFrom} TO ${dateTo}]`
+      : `${dateField}:[${dateFrom} TO ${dateTo}]`;
+    let allItems = [];
+    let pg = 0;
+    const pageSize = 50;
+    while (true) {
+      const result = await secPost(ep, {
+        query: q,
+        from: pg * pageSize,
+        size: pageSize,
+        sort: [{ [dateField]: { order: "desc" } }],
+      });
+      if (!result?.data || result.data.length === 0) break;
+      allItems = [...allItems, ...result.data];
+      if (allItems.length >= result.total?.value || allItems.length >= 10000) break;
+      pg++;
+      await new Promise(r => setTimeout(r, 300));
+    }
+    const rows = allItems.map(item => ({
+      "Date": fmtDate(item.releasedAt || item.dateTime),
+      "Title": item.title || item.respondents?.map(r=>r.name)?.join(", ") || "SEC Action",
+      "Tags": item.tags?.join(", ") || "",
+      "Settlement": item.hasAgreedToSettlement === true ? "Settled" : item.hasAgreedToSettlement === false ? "Contested" : "",
+      "Total Penalty": item.penaltyAmounts?.filter(p=>p&&p.penaltyAmount).reduce((s,p)=>s+(Number(p.penaltyAmount)||0),0) || "",
+      "Entities": item.entities?.map(e=>e.name).join(", ") || "",
+      "Violated Sections": item.violatedSections?.join("; ") || "",
+      "Summary": item.summary || "",
+      "URL": item.url || item.urls?.[0]?.url || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "SEC Enforcement");
+    XLSX.writeFile(wb, `SEC_${feedType}_${TODAY}.xlsx`);
+    setExporting(false);
+  };
 
   const feedTypes=[
     {id:"enforcement",label:"Enforcement Actions",color:C.enforcement,icon:"⚖"},
@@ -388,7 +385,6 @@ const exportToExcel = async () => {
         input,button{font-family:inherit;outline:none}
       `}</style>
 
-      {/* NAV */}
       <nav style={{borderBottom:"1px solid #0f1420",padding:"0 28px",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,background:"#070a10",zIndex:100}}>
         <div style={{display:"flex",alignItems:"center",gap:14}}>
           <div style={{display:"flex",alignItems:"center",gap:9}}>
@@ -404,8 +400,6 @@ const exportToExcel = async () => {
       </nav>
 
       <div style={{maxWidth:1100,margin:"0 auto",padding:"24px 28px"}}>
-
-        {/* STATS */}
         <div style={{display:"flex",gap:10,marginBottom:24,flexWrap:"wrap"}}>
           <StatTile label="Enforcement 2024–25" value={statsMap.enforcement??"…"} sub="Actions filed" color={C.enforcement} icon="⚖"/>
           <StatTile label="Litigation 2024–25"  value={statsMap.litigation??"…"}  sub="Releases"     color={C.litigation}  icon="⚡"/>
@@ -413,7 +407,6 @@ const exportToExcel = async () => {
           <StatTile label="AI Engine"            value="Claude"                     sub="Sonnet · Live" color={C.purple}     icon="✦"/>
         </div>
 
-        {/* TABS */}
         <div style={{display:"flex",gap:2,borderBottom:"1px solid #0f1420",marginBottom:22}}>
           {[["feed","Live Feed"],["trends","Trend Analysis"],["search","Deep Search"]].map(([id,label])=>(
             <button key={id} onClick={()=>setTab(id)}
@@ -423,7 +416,6 @@ const exportToExcel = async () => {
           ))}
         </div>
 
-        {/* ── FEED ── */}
         {tab==="feed"&&(
           <div style={{display:"grid",gridTemplateColumns:"190px 1fr",gap:20}}>
             <div>
@@ -461,14 +453,10 @@ const exportToExcel = async () => {
                   style={{background:"#e05c3a",border:"none",borderRadius:7,padding:"8px 16px",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
                   Search
                 </button>
-                <button onClick={()=>{setActiveQuery(searchText);setPage(0);}}
-  style={{background:"#e05c3a",border:"none",borderRadius:7,padding:"8px 16px",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
-  Search
-</button>
-<button onClick={exportToExcel} disabled={items.length === 0 || exporting}
-  style={{background:"#0f1117",border:"1px solid #1a2030",borderRadius:7,padding:"8px 16px",color:items.length===0?"#333":"#ccd6f6",fontSize:12,fontWeight:600,cursor:items.length===0?"default":"pointer"}}>
-  {exporting ? "Exporting…" : "↓ Export All"}
-</button>
+                <button onClick={exportToExcel} disabled={items.length === 0 || exporting}
+                  style={{background:"#0f1117",border:"1px solid #1a2030",borderRadius:7,padding:"8px 16px",color:items.length===0?"#333":"#ccd6f6",fontSize:12,fontWeight:600,cursor:items.length===0?"default":"pointer"}}>
+                  {exporting ? "Exporting…" : "↓ Export All"}
+                </button>
               </div>
 
               <div style={{fontSize:12,color:"#334",marginBottom:12,fontFamily:"'DM Mono',monospace"}}>
@@ -502,7 +490,6 @@ const exportToExcel = async () => {
           </div>
         )}
 
-        {/* ── TRENDS ── */}
         {tab==="trends"&&(
           <div style={{animation:"fadeSlide 0.3s ease"}}>
             {trendData.length===0&&!loadingTrend&&(
@@ -511,7 +498,7 @@ const exportToExcel = async () => {
                   style={{background:C.enforcement,border:"none",borderRadius:9,padding:"13px 30px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                   Load Live Trend Data
                 </button>
-                <div style={{fontSize:12,color:"#334",marginTop:10}}>Queries 2000–2024 across all sec-api.io enforcement databases</div>
+                <div style={{fontSize:12,color:"#334",marginTop:10}}>Queries 2000–2025 across all sec-api.io enforcement databases</div>
               </div>
             )}
             {loadingTrend&&<Spinner/>}
@@ -555,7 +542,7 @@ const exportToExcel = async () => {
                               itemStyle={{color:"#ccd6f6"}}
                               labelStyle={{color:"#ccd6f6"}}
                               formatter={(value, name) => [value, name]}
-                              />
+                            />
                           </PieChart>
                         </ResponsiveContainer>
                         <div style={{flex:1}}>
@@ -572,30 +559,30 @@ const exportToExcel = async () => {
                   </div>
                 </div>
 
-               <div style={{background:"#0f1117",border:"1px solid #0f1420",borderRadius:13,padding:20,marginBottom:18}}>
-  <div style={{fontSize:11,color:"#445",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:16,fontFamily:"'DM Mono',monospace"}}>Top Enforcement Tags by Year</div>
-  {tagsByYear.length>0?(()=>{
-    const allTags = [...new Set(tagsByYear.flatMap(yr => Object.keys(yr).filter(k => k !== "year")))];
-    const palette = [C.enforcement,C.litigation,C.admin,C.aaer,C.purple,"#ff6b9d","#00d4aa","#ffd700"];
-    return (
-      <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={tagsByYear} barGap={2} barCategoryGap="5%">
-  <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
-  <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
-  <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
-  <Legend wrapperStyle={{fontSize:11,color:"#667",paddingTop:12}}/>
-  <Tooltip
-    contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}
-    itemStyle={{color:"#ccd6f6"}}
-  />
-  {allTags.map((tag,i) => (
-    <Bar key={tag} dataKey={tag} fill={palette[i%palette.length]} name={tag} radius={[3,3,0,0]}/>
-  ))}
-</BarChart>
-      </ResponsiveContainer>
-    );
-  })():<div style={{color:"#334",fontSize:12,textAlign:"center",paddingTop:40}}>Load trend data to see tag breakdown</div>}
-</div>
+                <div style={{background:"#0f1117",border:"1px solid #0f1420",borderRadius:13,padding:20,marginBottom:18}}>
+                  <div style={{fontSize:11,color:"#445",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:16,fontFamily:"'DM Mono',monospace"}}>Top Enforcement Tags by Year</div>
+                  {tagsByYear.length>0?(()=>{
+                    const allTags = [...new Set(tagsByYear.flatMap(yr => Object.keys(yr).filter(k => k !== "year")))];
+                    const palette = ["#e05c3a","#4a9eff","#34c98d","#f0a500","#b388ff","#ff6b9d","#00d4aa","#ffd700","#ff6b35","#00b4d8","#90e0ef","#c77dff","#80ffdb","#ffb703","#fb8500"];
+                    return (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={tagsByYear} barGap={2} barCategoryGap="5%">
+                          <CartesianGrid stroke="#0d1018" strokeDasharray="3 3"/>
+                          <XAxis dataKey="year" tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+                          <YAxis tick={{fill:"#445",fontSize:11}} axisLine={false} tickLine={false}/>
+                          <Legend wrapperStyle={{fontSize:11,color:"#667",paddingTop:12}}/>
+                          <Tooltip
+                            contentStyle={{background:"#0a0d14",border:"1px solid #1a2030",borderRadius:8,fontSize:12,color:"#ccd6f6"}}
+                            itemStyle={{color:"#ccd6f6"}}
+                          />
+                          {allTags.map((tag,i) => (
+                            <Bar key={tag} dataKey={tag} fill={palette[i%palette.length]} name={tag} radius={[3,3,0,0]}/>
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    );
+                  })():<div style={{color:"#334",fontSize:12,textAlign:"center",paddingTop:40}}>Load trend data to see tag breakdown</div>}
+                </div>
 
                 <div style={{background:"#060910",border:`1px solid ${C.purple}33`,borderRadius:13,padding:22}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -614,7 +601,6 @@ const exportToExcel = async () => {
           </div>
         )}
 
-        {/* ── SEARCH ── */}
         {tab==="search"&&(
           <div style={{animation:"fadeSlide 0.3s ease"}}>
             <div style={{background:"#0f1117",border:"1px solid #0f1420",borderRadius:13,padding:24,marginBottom:18}}>
@@ -645,6 +631,7 @@ const exportToExcel = async () => {
               {[
                 {label:"SEED Database (NYU / Cornerstone)",desc:"All SEC enforcement against public companies since 1978",url:"https://seed.law.nyu.edu",color:C.enforcement},
                 {label:"Stanford FCPA Clearinghouse",desc:"Every FCPA enforcement action since enactment — with analytics",url:"https://fcpa.stanford.edu",color:C.litigation},
+                {label:"CourtListener / PACER",desc:"Federal court cases and dockets searchable by keyword",url:"https://www.courtlistener.com/?type=r&q=securities+fraud",color:"#4a9eff"},
                 {label:"SEC Litigation Releases",desc:"Official civil lawsuits & enforcement releases",url:"https://www.sec.gov/litigation/litreleases",color:C.admin},
                 {label:"SEC AAERs (Official)",desc:"Accounting & Auditing Enforcement Releases 1997–present",url:"https://www.sec.gov/litigation/aaers",color:C.aaer},
                 {label:"SEC Rule Proposals",desc:"Current, proposed, and final rulemakings",url:"https://www.sec.gov/rules/proposed.shtml",color:C.purple},
